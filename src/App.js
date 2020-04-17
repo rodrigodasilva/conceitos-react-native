@@ -14,6 +14,7 @@ import api from "./services/api";
 
 export default function App() {
   const [repositories, setRepositories] = useState([]);
+  const [refreshFlatList, setRefreshFlatList] = useState(false);
 
   useEffect(() => {
     api.get("repositories").then((response) => {
@@ -22,8 +23,18 @@ export default function App() {
   }, []);
 
   async function handleLikeRepository(id) {
-    // Implement "Like Repository" functionality
-    alert(id);
+    const response = await api.post(`repositories/${id}/like`);
+
+    const { likes: newLikes } = response.data;
+
+    const repositoryIndex = repositories.findIndex(
+      (repository) => repository.id === id
+    );
+
+    repositories[repositoryIndex].likes = newLikes;
+
+    setRepositories(repositories);
+    setRefreshFlatList((old) => !old);
   }
 
   return (
@@ -32,6 +43,7 @@ export default function App() {
       <SafeAreaView style={styles.container}>
         <FlatList
           data={repositories}
+          extraData={refreshFlatList}
           keyExtractor={(repository) => repository.id}
           renderItem={({ item: repository }) => (
             <View style={styles.repositoryContainer}>
